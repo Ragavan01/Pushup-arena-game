@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+/**
+ * app/globals.css
+ * ------------------------------------------------------------------
+ * Replaces the untouched create-next-app template (audit B1: Arial
+ * body font, unused --font-geist-* vars, a white --background that
+ * contradicted the always-dark UI). This is now the single source of
+ * design tokens (@theme) plus the shared keyframes/utilities that were
+ * previously copy-pasted and drifting across three separate inline
+ * <style> blocks (audit B3) — .pua-grid, .pua-press and .pua-display
+ * differed between arena and login, and /rankings referenced both
+ * without defining either, silently falling back to system fonts.
+ *
+ * --font-display-raw / --font-mono-game-raw are populated by next/font
+ * in app/layout.tsx; @theme maps them to the font-display /
+ * font-mono-game Tailwind utilities with real fallback stacks.
+ * ------------------------------------------------------------------
+ */
+
+@theme {
+  /* Brand — mirror lib/tokens.ts (COLOR) exactly if you change these */
+  --color-base: #090b10;
+  --color-ink-1: #0f1219;
+  --color-ink-2: #161a24;
+  --color-mint: #2bffb0;
+  --color-mint-dim: #15805a;
+  --color-coral: #ff5c3e;
+  --color-coral-dim: #99311e;
+  --color-amber: #ffc94d;
+  --color-danger: #ff3b3b;
+  --color-streak-cyan: #00e5ff;
+  --color-streak-violet: #d942ff;
+
+  --font-display: var(--font-display-raw), ui-sans-serif, system-ui, sans-serif;
+  --font-mono-game: var(--font-mono-game-raw), ui-monospace, SFMono-Regular, monospace;
+
+  --radius-panel: 2rem;
+
+  /* Motion tokens — mirror lib/motion.ts (DURATION, EASE_*) exactly if you change these */
+  --duration-instant: 120ms;
+  --duration-fast: 200ms;
+  --duration-base: 320ms;
+  --duration-slow: 600ms;
+  --ease-calm: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-fade-up: fade-up var(--duration-slow) var(--ease-calm) both;
+  --animate-shake: shake 0.4s ease;
+  --animate-scanline: scanline-sweep 7s linear infinite;
+  --animate-orb-drift: orb-drift 9s ease-in-out infinite alternate;
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--color-base);
+    color: white;
+    font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Global focus-visible safety net. Individual interactive components
+     (Button, Field, SegmentedControl) set their own focus-visible ring
+     too — this is the fallback for anything that doesn't, satisfying
+     G1's "focus-visible is missing on most controls". */
+  :focus-visible {
+    outline: 2px solid var(--color-mint);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* Text-selectable numerals everywhere: ELO, timers, scores. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Safe-area padding for notches / home indicators (audit C1). */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Shared press feedback for every tappable control. */
+  .press {
+    transition: transform var(--duration-instant) ease;
+  }
+  .press:active {
+    transform: scale(0.97);
+  }
+
+  .glow-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .scanline {
+    background: linear-gradient(to bottom, transparent 0%, rgba(43, 255, 176, 0.05) 50%, transparent 100%);
+    background-size: 100% 220%;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes scanline-sweep {
+  0% {
+    background-position: 0 -120%;
+  }
+  100% {
+    background-position: 0 220%;
+  }
+}
+
+/* transform-only (no background-position animation — the performance
+   budget explicitly calls out background-position animation as not
+   compositor-friendly; this drifts an oversized layer with `transform`
+   instead, on a GPU-composited layer). */
+@keyframes orb-drift {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(24px, -18px) scale(1.06);
+  }
+}
+
+/**
+ * Reduced motion (audit D7 / G1 / definition_of_done: "Delete the white
+ * flash keyframe entirely" — aura-lightning's white-flash keyframe is
+ * removed outright when the arena HUD is rebuilt in Phase 3, not just
+ * suppressed here; this block is the general-purpose net for every
+ * other animation in the app, present and future).
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
